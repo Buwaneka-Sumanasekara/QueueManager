@@ -11,6 +11,7 @@ import BlockChain from '../../models/BlockChain';
 import Block from '../../models/Block';
 import { AddBlockInputProps, BlockType } from '../../types/blockTypes';
 import VehicleQueue from '../../components/VehicleQueue';
+import TempVehicleQueues from '../../components/TemporaryQueue';
 
 
 function HomePage() {
@@ -19,6 +20,7 @@ function HomePage() {
     const queueRef = useRef(new BlockChain());
 
     const [vehicleList, setVehicleList] = useState<Block[]>([]);
+    const [temVehicleList, setTemVehicleList] = useState<Array<Block[]>>([]);
 
 
     function onAddBlock(input: AddBlockInputProps) {
@@ -34,20 +36,25 @@ function HomePage() {
 
             const list = queueRef.current.getCurrentList();
             setVehicleList([...list])
+
+            const temList = queueRef.current.getTemporaryLists();
+            setTemVehicleList([...temList]);
         } catch (er: any) {
             console.log(er.message);
         }
     }
 
-    console.log("vehicleList", vehicleList);
     return (
         <Container className='fill'>
             <Row>
                 <Col md={4} className={"py-4"}>
                     <AddVehicle onAddBlock={onAddBlock} form={form} />
                 </Col>
-                <Col md={8} className={"px-4"}>
+                <Col md={4} className={"px-4"}>
                     <VehicleQueue list={vehicleList} />
+                </Col>
+                <Col md={4} className={"px-4"}>
+                    <TempVehicleQueues list={temVehicleList} />
                 </Col>
             </Row>
         </Container>

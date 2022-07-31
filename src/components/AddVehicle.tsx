@@ -1,7 +1,7 @@
 import React from 'react';
 import { Col, Row, Layout, Button, Form, Input, Radio } from 'antd';
-import { AddBlockInputProps } from '../types/blockTypes';
 import { FormInstance } from 'antd/es/form/Form';
+import { AddBlockInputProps } from '../types/blockTypes';
 
 const { Header, Footer, Sider, Content } = Layout;
 

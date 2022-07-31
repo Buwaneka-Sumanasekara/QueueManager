@@ -9,7 +9,7 @@ type VehicleQueueProps = {
 function VehicleQueue(props: VehicleQueueProps) {
     const { list } = props;
 
-    console.log(list);
+
     return (
         <List
             itemLayout="horizontal"
