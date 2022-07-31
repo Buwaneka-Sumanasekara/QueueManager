@@ -1,4 +1,4 @@
-import { BlockType } from "../types/Block";
+import { BlockType } from "../types/blockTypes";
 
 class Block {
 
@@ -18,9 +18,6 @@ class Block {
     updatePosition(sequence: number) {
         this.sequence = sequence;
     }
-
-
-
 }
 
 Block.prototype.toString = function BlockToString() {

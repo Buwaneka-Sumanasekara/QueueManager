@@ -1,4 +1,5 @@
-import { BlockType } from "../types/Block";
+import React from "react";
+import { BlockType } from "../types/blockTypes";
 import Block from "./Block";
 import BlockConflict from "./BlockConflict";
 
@@ -28,9 +29,6 @@ class BlockChain {
                 this.blockChain.push(block);
             } else if (forceReplace) {
                 this.blockChain[0] = block;
-            } else {
-                const firstBlock = this.getFistBlock();
-
             }
         } else {
             throw new Error("There is no previous block for the first block");
@@ -46,14 +44,19 @@ class BlockChain {
             const nextNo = this.blockChain.length + 1;
             block.sequence = nextNo
 
-            if (lastBlock?.nextBlock?.key === block.currentBlock?.key && lastBlock?.currentBlock?.key === block.prevBlock.key) {
+
+            if (lastBlock?.currentBlock?.key === block.prevBlock.key) {
                 this.blockChain.push(block);
                 return block;
-            } else if (lastBlock?.nextBlock?.key !== block.currentBlock?.key) {
-                const errConflict = new BlockConflict(nextNo, lastBlock?.nextBlock as BlockType, block.currentBlock as BlockType, block);
+            } else if (lastBlock?.nextBlock === null && block.prevBlock !== null) {
+                this.blockChain[lastBlock?.sequence as number] = block;
+                return block;
+            }
+            else if (lastBlock?.nextBlock?.key !== block.currentBlock?.key) {
+                const errConflict = new BlockConflict("current", nextNo, lastBlock?.nextBlock as BlockType, block.currentBlock as BlockType, block);
                 throw Error(errConflict.toString());
-            } else if (lastBlock?.currentBlock?.key !== block.prevBlock?.key) {
-                const errConflict = new BlockConflict(nextNo - 1, lastBlock?.currentBlock as BlockType, block.prevBlock as BlockType, block);
+            } else if (lastBlock?.currentBlock?.key !== block.prevBlock.key) {
+                const errConflict = new BlockConflict("previous", nextNo - 1, lastBlock?.currentBlock as BlockType, block.prevBlock as BlockType, block);
                 throw Error(errConflict.toString());
             }
         }
