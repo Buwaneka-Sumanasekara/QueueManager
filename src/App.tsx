@@ -1,14 +1,10 @@
 import './App.css';
-import BlockChainTest from './Test';
+import HomeScreen from './pages/Home';
 
 function App() {
   return (
     <div className="App">
-      <p>
-        Test Block chain
-      </p>
-
-      <BlockChainTest />
+      <HomeScreen />
     </div>
   );
 }
