@@ -1,7 +1,4 @@
-import React from "react";
-import { BlockType } from "../types/blockTypes";
 import Block from "./Block";
-import BlockConflict from "./BlockConflict";
 
 
 type TemBlockChainPosition = {
@@ -14,6 +11,8 @@ class BlockChain {
     private blockChain: Block[] = [];
 
     private temBlockChains: Array<Block[]> = [];
+
+    private conflictBlockChains = new Map<string, { org: Block, tem: Block }>();
 
     constructor() {
         this.blockChain = []
@@ -31,6 +30,10 @@ class BlockChain {
 
     getTemporaryLists(): Array<Block[]> {
         return this.temBlockChains;
+    }
+
+    getConflictLists(): Map<string, { org: Block, tem: Block }> {
+        return this.conflictBlockChains;
     }
 
     private validateBlock(block: Block): boolean {
@@ -72,29 +75,36 @@ class BlockChain {
 
     }
 
+    addNextBlock(block: Block) {
+        if (block.nextBlock) {
+            const nextBlock: Block = {
+                prevBlock: block.currentBlock,
+                currentBlock: block.nextBlock,
+                nextBlock: null,
+                sequence: block.sequence + 1,
+            }
+            this.blockChain.push(nextBlock);
+        }
+    }
+
     addToBlockChainNextPosition(block: Block) {
         if (this.validateBlock(block)) {
-            if (block.prevBlock === null) {
-                return this.addFirstBlock(block);
+            if (block.prevBlock === null && this.blockChain.length === 0) {
+                this.addFirstBlock(block);
+                return;
+            } else if (block.prevBlock === null && this.blockChain.length > 0) {
+                this.addToTempBlockChain(block);
+
             } else {
                 const lastBlock = this.getLastBlock();
                 const nextNo = this.blockChain.length + 1;
 
-                if (lastBlock?.currentBlock?.key === block.prevBlock.key) {
+                if (lastBlock?.currentBlock?.key === block?.prevBlock?.key) {
                     block.sequence = nextNo
                     this.blockChain.push(block);
 
-                    if (block.nextBlock) {
-                        const nextBlock: Block = {
-                            prevBlock: block.currentBlock,
-                            currentBlock: block.nextBlock,
-                            nextBlock: null,
-                            sequence: block.sequence + 1,
-                        }
-                        this.blockChain.push(nextBlock);
-                    }
+                    this.addNextBlock(block);
 
-                    return block;
                 } else if (lastBlock?.nextBlock === null && (block.prevBlock !== null && lastBlock.currentBlock?.key == block.prevBlock.key)) {
 
                     const updatedLastBlock: Block = {
@@ -105,12 +115,15 @@ class BlockChain {
 
                     block.sequence = nextNo
                     this.blockChain.splice(this.blockChain.length, 0, block);
-                    return block;
+
+
                 } else {
                     this.addToTempBlockChain(block);
-
                 }
-                this.reArrangeCurrentBlockChainsWithTempLists()
+
+
+
+
                 /*
                 else if (lastBlock?.nextBlock?.key !== block.currentBlock?.key) {
                     this.addToTempBlockChain(block);
@@ -122,29 +135,76 @@ class BlockChain {
                     this.addToTempBlockChain(block);
                 }
                 */
+
+
             }
+            this.reArrangeCurrentBlockChainsWithTempLists();
+            this.identifyConflicts();
         }
     }
 
 
-    reArrangeCurrentBlockChainsWithTempLists() {
-        for (let i = 0; i < this.temBlockChains.length; i++) {
 
-            const currentTemBlockChain: Block[] = this.temBlockChains[i];
 
-            const lastBlockOrg = this.blockChain[this.blockChain.length - 1];
-            const lastBlockTemBlockchain = currentTemBlockChain[currentTemBlockChain.length - 1];
+    identifyConflicts() {
+        try {
+            for (let i = 0; i < this.temBlockChains.length; i++) {
+                const currentTemBlockChain: Block[] = this.temBlockChains[i];
+                for (let j = 0; i < currentTemBlockChain.length; j++) {
+                    const currentTemBlock: Block = currentTemBlockChain[j];
+                    if (currentTemBlock) {
+                        for (let k = 0; k < this.blockChain.length; k++) {
+                            const block: Block = this.blockChain[k];
 
-            if (lastBlockOrg.nextBlock?.key === lastBlockTemBlockchain.currentBlock?.key) {
-                //add to list tail
-                this.blockChain.push(...currentTemBlockChain);
-                this.temBlockChains.splice(i, 1);
-            } if (lastBlockOrg.currentBlock?.key === lastBlockTemBlockchain.prevBlock?.key) {
-                //add to list tail
-                this.blockChain = this.blockChain.concat(currentTemBlockChain);
-                this.temBlockChains.splice(i, 1);
+                            if (block && currentTemBlock.currentBlock?.key === block.currentBlock?.key) {
+                                if ((currentTemBlock.nextBlock?.key === block.nextBlock?.key && currentTemBlock.prevBlock?.key === block.prevBlock?.key)) {
+
+                                } else {
+                                    this.conflictBlockChains.set(`${block}_%${currentTemBlock}`, {
+                                        org: block as Block,
+                                        tem: currentTemBlock as Block
+                                    })
+                                }
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
             }
+        } catch (error) {
+            console.log(error);
         }
+
+    }
+
+
+    reArrangeCurrentBlockChainsWithTempLists() {
+        try {
+            for (let i = 0; i < this.temBlockChains.length; i++) {
+
+                const currentTemBlockChain: Block[] = this.temBlockChains[i];
+
+                const lastIndex = this.blockChain.length - 1;
+                const lastBlockOrg = this.blockChain[lastIndex];
+                const firstBlockTemBlockchain = currentTemBlockChain[0];
+
+
+                if (lastBlockOrg.currentBlock?.key === firstBlockTemBlockchain.currentBlock?.key) {
+                    //add to list tail
+                    firstBlockTemBlockchain.prevBlock = lastBlockOrg.prevBlock;
+                    firstBlockTemBlockchain.sequence = lastBlockOrg.sequence;
+                    this.blockChain.splice(lastIndex, 1, firstBlockTemBlockchain)
+
+                    this.addNextBlock(firstBlockTemBlockchain);
+
+                    this.temBlockChains.splice(i, 1);
+                }
+            }
+        } catch (error) {
+            console.log("reArrangeCurrentBlockChainsWithTempLists:", error);
+        }
+
     }
 
 
@@ -158,7 +218,6 @@ class BlockChain {
             this.temBlockChains.push(temBlockChain);
         } else {
             const createTemBlockChain = this.findSequenceInTemBlockChain(block);
-            console.log("updatedTemBlockChain", createTemBlockChain)
             if (createTemBlockChain) {
                 const newPosition = { parentIndex: this.temBlockChains.length, replacement: [block] } as TemBlockChainPosition;
                 this.addTempBlockChain(newPosition);

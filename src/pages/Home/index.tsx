@@ -12,6 +12,7 @@ import Block from '../../models/Block';
 import { AddBlockInputProps, BlockType } from '../../types/blockTypes';
 import VehicleQueue from '../../components/VehicleQueue';
 import TempVehicleQueues from '../../components/TemporaryQueue';
+import ConflictBlocks from '../../components/Conflicts';
 
 
 function HomePage() {
@@ -21,7 +22,7 @@ function HomePage() {
 
     const [vehicleList, setVehicleList] = useState<Block[]>([]);
     const [temVehicleList, setTemVehicleList] = useState<Array<Block[]>>([]);
-
+    const [conflictList, setConflictList] = useState<Map<string, { org: Block, tem: Block }>>();
 
     function onAddBlock(input: AddBlockInputProps) {
 
@@ -39,6 +40,9 @@ function HomePage() {
 
             const temList = queueRef.current.getTemporaryLists();
             setTemVehicleList([...temList]);
+
+            const conflictList = queueRef.current.getConflictLists();
+            setConflictList(conflictList);
         } catch (er: any) {
             console.log(er.message);
         }
@@ -53,8 +57,11 @@ function HomePage() {
                 <Col md={4} className={"px-4"}>
                     <VehicleQueue list={vehicleList} />
                 </Col>
-                <Col md={4} className={"px-4"}>
+                <Col md={2} className={"px-4"}>
                     <TempVehicleQueues list={temVehicleList} />
+                </Col>
+                <Col md={2} className={"px-4"}>
+                    <ConflictBlocks list={conflictList} />
                 </Col>
             </Row>
         </Container>
