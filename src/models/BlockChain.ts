@@ -181,26 +181,29 @@ class BlockChain {
 
     reArrangeCurrentBlockChainsWithTempLists() {
         try {
-            for (let i = 0; i < this.temBlockChains.length; i++) {
+            if (this.blockChain.length > 0) {
+                for (let i = 0; i < this.temBlockChains.length; i++) {
 
-                const currentTemBlockChain: Block[] = this.temBlockChains[i];
+                    const currentTemBlockChain: Block[] = this.temBlockChains[i];
 
-                const lastIndex = this.blockChain.length - 1;
-                const lastBlockOrg = this.blockChain[lastIndex];
-                const firstBlockTemBlockchain = currentTemBlockChain[0];
+                    const lastIndex = this.blockChain.length - 1;
+                    const lastBlockOrg = this.blockChain[lastIndex];
+                    const firstBlockTemBlockchain = currentTemBlockChain[0];
 
 
-                if (lastBlockOrg.currentBlock?.key === firstBlockTemBlockchain.currentBlock?.key) {
-                    //add to list tail
-                    firstBlockTemBlockchain.prevBlock = lastBlockOrg.prevBlock;
-                    firstBlockTemBlockchain.sequence = lastBlockOrg.sequence;
-                    this.blockChain.splice(lastIndex, 1, firstBlockTemBlockchain)
+                    if (lastBlockOrg.currentBlock?.key === firstBlockTemBlockchain.currentBlock?.key) {
+                        //add to list tail
+                        firstBlockTemBlockchain.prevBlock = lastBlockOrg.prevBlock;
+                        firstBlockTemBlockchain.sequence = lastBlockOrg.sequence;
+                        this.blockChain.splice(lastIndex, 1, firstBlockTemBlockchain)
 
-                    this.addNextBlock(firstBlockTemBlockchain);
+                        this.addNextBlock(firstBlockTemBlockchain);
 
-                    this.temBlockChains.splice(i, 1);
+                        this.temBlockChains.splice(i, 1);
+                    }
                 }
             }
+
         } catch (error) {
             console.log("reArrangeCurrentBlockChainsWithTempLists:", error);
         }
